@@ -1,4 +1,6 @@
-﻿namespace ClassLibrary
+﻿using System.Text;
+
+namespace ClassLibrary
 {
     public class Doctor
     {
@@ -7,7 +9,16 @@
 
         private string? _name;
 
-        public List<Patient>? Patients { get; set; }
+        public List<Patient>? Patients { get; set; } = new List<Patient>();
+
+        /// <summary>
+        /// Обрабатывает событие обновления пациента (изменение appointmentCount происходит в Patient
+        /// </summary>
+        /// <param name="sender">Источник события</param>
+        /// <param name="e">Содержит дату и время обновления</param>
+        public void OnPatientUpdated(object sender, EnhancedEventArgs e) { }
+
+        public event EventHandler<EnhancedEventArgs> Updated;
 
         public string? Name
         {
@@ -44,9 +55,17 @@
             AppointmentCount = appointmentCount;
         }
 
-        public void ToJson()
+        public string ToJSON()
         {
-            ;
+            var sb = new StringBuilder();
+
+            sb.AppendLine("{");
+            sb.AppendLine($"  \"doctor_id\": {Id},");
+            sb.AppendLine($"  \"name\": {Name},");
+            sb.AppendLine($"  \"appointment_count\": {AppointmentCount}");
+            sb.Append("}");
+
+            return sb.ToString();
         }
     }
 }
