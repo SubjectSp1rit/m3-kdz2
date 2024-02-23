@@ -1,14 +1,42 @@
 ﻿using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Xml.Linq;
 
 namespace ClassLibrary
 {
     public class Doctor
     {
-        public int Id { get; set; }
-        public int AppointmentCount { get; set; }
-
+        private int _id;
+        private int _appointmentCount;
         private string? _name;
 
+        [JsonPropertyName("doctor_id")]
+        public int Id
+        {
+            get => _id;
+            set => _id = value;
+        }
+
+        [JsonPropertyName("name")]
+        public string? Name
+        {
+            get => _name;
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(value), "Имя пациента не может быть пустой строкой.");
+                else _name = value;
+            }
+        }
+
+        [JsonPropertyName("appointment_count")]
+        public int AppointmentCount
+        {
+            get => _appointmentCount;
+            set => _appointmentCount = value;
+        }
+
+        [JsonIgnore]
         public List<Patient>? Patients { get; set; } = new List<Patient>();
 
         /// <summary>
@@ -20,31 +48,6 @@ namespace ClassLibrary
 
         public event EventHandler<EnhancedEventArgs> Updated;
 
-        public string? Name
-        {
-            get => _name;
-            set
-            {
-                if (value == null) throw new ArgumentNullException(nameof(value), "Имя пациента не может быть пустой строкой.");
-                else _name = value;
-            }
-        }
-
-        public Doctor()
-        {
-            throw new NotImplementedException("Пустой конструктор не предусмотрен классом Doctor.");
-        }
-
-        public Doctor(int id,
-                      string? name,
-                      int appointmentCount,
-                      List<Patient>? patients)
-        {
-            Id = id;
-            Name = name;
-            AppointmentCount = appointmentCount;
-            Patients = patients;
-        }
 
         public Doctor(int id,
                       string? name,
@@ -55,17 +58,25 @@ namespace ClassLibrary
             AppointmentCount = appointmentCount;
         }
 
+        public override bool Equals(object? obj)
+        {
+            return obj is Doctor doctor && Id == doctor.Id;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Id);
+        }
+
         public string ToJSON()
         {
-            var sb = new StringBuilder();
+            JsonSerializerOptions options = new()
+            {
+                WriteIndented = true
+            };
 
-            sb.AppendLine("{");
-            sb.AppendLine($"  \"doctor_id\": {Id},");
-            sb.AppendLine($"  \"name\": {Name},");
-            sb.AppendLine($"  \"appointment_count\": {AppointmentCount}");
-            sb.Append("}");
-
-            return sb.ToString();
+            JsonSerializerOptions optionsCopy = new(options);
+            return JsonSerializer.Serialize(this, optionsCopy);
         }
     }
 }

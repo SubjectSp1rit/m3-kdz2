@@ -1,27 +1,34 @@
-﻿using System.Text;
+﻿using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ClassLibrary
 {
     public class Patient
     {
-        public int Id { get; set; }
-        public int Age { get; set; }
-
+        private int _id;
+        private string? _name;
+        private int _age;
+        private string? _gender;
+        private string? _diagnosis;
         private int _heartRate;
         private double _temperature;
         private int _oxygenSaturaion;
-
-        private string? _name;
-        private string? _gender;
-        private string? _diagnosis;
-
-        public List<Doctor>? Doctors { get; set; } = new List<Doctor>();
 
         /// <summary>
         /// Событие, возникающее при изменении показателей пациента
         /// </summary>
         public event EventHandler<EnhancedEventArgs> Updated;
 
+        [JsonPropertyName("patient_id")]
+        public int Id
+        {
+            get => _id;
+            set => _id = value;
+        }
+
+        [JsonPropertyName("name")]
         public string? Name
         {
             get => _name;
@@ -32,6 +39,36 @@ namespace ClassLibrary
             }
         }
 
+        [JsonPropertyName("age")]
+        public int Age
+        {
+            get => _age;
+            set => _age = value;
+        }
+
+        [JsonPropertyName("gender")]
+        public string? Gender
+        {
+            get => _gender;
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(value), "Пол пациента не может быть пустой строкой.");
+                else _gender = value;
+            }
+        }
+
+        [JsonPropertyName("diagnosis")]
+        public string? Diagnosis
+        {
+            get => _diagnosis;
+            set
+            {
+                if (value == null) throw new ArgumentNullException(nameof(value), "Диагноз пациента не может быть пустой строкой.");
+                else _diagnosis = value;
+            }
+        }
+
+        [JsonPropertyName("heart_rate")]
         public int HeartRate
         {
             get => _heartRate;
@@ -42,6 +79,7 @@ namespace ClassLibrary
             }
         }
 
+        [JsonPropertyName("temperature")]
         public double Temperature
         {
             get => _temperature;
@@ -52,6 +90,7 @@ namespace ClassLibrary
             }
         }
 
+        [JsonPropertyName("oxygen_saturation")]
         public int OxygenSaturation
         {
             get => _oxygenSaturaion;
@@ -61,6 +100,10 @@ namespace ClassLibrary
                 OnFieldChanged("oxygenSaturation");
             }
         }
+
+        [JsonPropertyName("doctors")]
+
+        public List<Doctor>? Doctors { get; set; } = new List<Doctor>();
 
         /// <summary>
         /// Вызывает событие при изменении показателей
@@ -73,7 +116,6 @@ namespace ClassLibrary
             switch (fieldName)
             {
                 case "heartRate":
-                    Console.WriteLine("пизда бачку");
                     if (HeartRate < 60 || HeartRate > 100)
                     {
                         foreach (var doctor in Doctors)
@@ -126,51 +168,6 @@ namespace ClassLibrary
             }
         }
 
-        public string? Gender
-        {
-            get => _gender;
-            set
-            {
-                if (value == null) throw new ArgumentNullException(nameof(value), "Пол пациента не может быть пустой строкой.");
-                else _gender = value;
-            }
-        }
-
-        public string? Diagnosis
-        {
-            get => _diagnosis;
-            set
-            {
-                if (value == null) throw new ArgumentNullException(nameof(value), "Диагноз пациента не может быть пустой строкой.");
-                else _diagnosis = value;
-            }
-        }
-
-        public Patient()
-        {
-            throw new NotImplementedException("Пустой конструктор не предусмотрен классом Patient.");
-        }
-
-        public Patient(int id, 
-                       string? name, 
-                       int age, 
-                       string? gender, 
-                       string? diagnosis, 
-                       int heartRate, 
-                       double temperature, 
-                       int oxygenSaturation,
-                       List<Doctor> doctors)
-        {
-            Id = id;
-            Name = name;
-            Age = age;
-            Gender = gender;
-            Diagnosis = diagnosis;
-            HeartRate = heartRate;
-            Temperature = temperature;
-            OxygenSaturation = oxygenSaturation;
-            Doctors = doctors;
-        }
 
         public Patient(int id,
                        string? name,
@@ -193,29 +190,13 @@ namespace ClassLibrary
 
         public string ToJSON()
         {
-            var sb = new StringBuilder();
-
-            sb.AppendLine("{");
-            sb.AppendLine($"  \"patient_id\": {Id},");
-            sb.AppendLine($"  \"name\": \"{Name}\",");
-            sb.AppendLine($"  \"age\": {Age},");
-            sb.AppendLine($"  \"gender\": \"{Gender}\",");
-            sb.AppendLine($"  \"diagnosis\": \"{Diagnosis}\",");
-            sb.AppendLine($"  \"heart_rate\": {HeartRate},");
-            sb.AppendLine($"  \"temperature\": {Temperature.ToString().Replace(',', '.')},");
-            sb.AppendLine($"  \"oxygen_saturation\": {OxygenSaturation},");
-            sb.AppendLine($"  \"doctors\": [");
-
-            for (int i = 0; i < Doctors?.Count; i++)
+            JsonSerializerOptions options = new()
             {
-                sb.Append(Doctors[i].ToJSON());
-                if (i != Doctors?.Count - 1) sb.AppendLine(",");
-            }
+                WriteIndented = true
+            };
 
-            sb.AppendLine("\n  ]");
-            sb.AppendLine("}");
-
-            return sb.ToString();
+            JsonSerializerOptions optionsCopy = new(options);
+            return JsonSerializer.Serialize(this, optionsCopy);
         }
     }
 }

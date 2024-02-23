@@ -1,7 +1,10 @@
 ﻿using static ClassLibrary.InputData;
 using static ClassLibrary.Doctor;
 using static ClassLibrary.Patient;
+using static ClassLibrary.OutputData;
+using static ClassLibrary.JsonParser;
 using ClassLibrary;
+using System.Text.Json;
 
 class Program
 {
@@ -9,24 +12,44 @@ class Program
     {
         do
         {
-            /*string? filePath = GetFilePath();*/
-            string? filePath = "D:/Other/15V.json";
+            bool finish = false;
+            string? filePath = default;
+            int mainMenuIndex = MainMenu();
+            switch (mainMenuIndex)
+            {
+                case 1:
+                    /*filePath = GetFilePath();*/
+                    filePath = "D:/Other/15V.json";
+                    break;
+                case 2: 
+                    finish = true;
+                    break;
+            }
+            if (finish) break;
 
-            Doctor doctor1 = new Doctor(4, "Adrian Leon", 0);
-            Doctor doctor2 = new Doctor(4, "Adrian Leon", 0);
-            Doctor doctor3 = new Doctor(4, "Adrian Leon", 0);
-            List<Doctor> doctorsArray = new List<Doctor> { doctor1, doctor2, doctor3 };
-            Patient patient = new Patient(1, "Stephanie Powell", 38, "Other", "Current", 78, 37.9, 96, doctorsArray);
-            patient.Updated += doctor1.OnPatientUpdated;
-            Console.WriteLine(patient.ToJSON());
-            var patients = new List<Patient> { patient };
+            List<Patient> patients = ReadJson(filePath);
+            foreach (var item in patients)
+            {
+                Console.WriteLine($"id: {item.Id}");
+                Console.WriteLine($"name: {item.Name}");
+                Console.WriteLine($"age: {item.Age}");
+                Console.WriteLine($"gender {item.Gender}");
+                Console.WriteLine($"diagnosis: {item.Diagnosis}");
+                Console.WriteLine($"heart_rate: {item.HeartRate}");
+                Console.WriteLine($"temperature: {item.Temperature}");
+                Console.WriteLine($"oxygen_saturation: {item.OxygenSaturation}");
+                foreach (var elem in item.Doctors)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine($"id: {elem.Id}");
+                    Console.WriteLine($"name: {elem.Name}");
+                    Console.WriteLine($"appointment_count: {elem.AppointmentCount}");
+                }
+            }
 
-            var autoSaver = new AutoSaver(patients, filePath.Insert(filePath.LastIndexOf(".json"), "_tmp"));
-            Console.WriteLine(doctor1.AppointmentCount);
-            patient.Temperature = 0;
-            Console.WriteLine(doctor1.AppointmentCount);
-            patient.Temperature = 200;
-            Console.WriteLine(doctor1.AppointmentCount);
+
+            /*int filterMenuIndex = FilterMenu();*/
+
 
             Console.WriteLine("Для завершения работы нажмите ESC; иначе любую другую клавишу.");
         } while (Console.ReadKey(true).Key != ConsoleKey.Escape);
